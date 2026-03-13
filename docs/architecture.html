@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Article Agentic Workflow Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  min-height: 100dvh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0c0e14;
+  color: #e0e0e6;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ========== TOKENS ========== */
+:root {
+  --bg-primary: #0c0e14;
+  --bg-card: #13151e;
+  --bg-tertiary: #181b27;
+
+  --color-user: #2dd4bf;
+  --color-user-bg: rgba(45, 212, 191, 0.06);
+  --color-user-border: rgba(45, 212, 191, 0.22);
+  --color-user-glow: rgba(45, 212, 191, 0.12);
+
+  --color-orch: #60a5fa;
+  --color-orch-bg: rgba(96, 165, 250, 0.06);
+  --color-orch-border: rgba(96, 165, 250, 0.22);
+  --color-orch-glow: rgba(96, 165, 250, 0.12);
+
+  --color-writer: #4ade80;
+  --color-writer-bg: rgba(74, 222, 128, 0.06);
+  --color-writer-border: rgba(74, 222, 128, 0.22);
+  --color-writer-glow: rgba(74, 222, 128, 0.12);
+
+  --color-reviewer: #fb923c;
+  --color-reviewer-bg: rgba(251, 146, 60, 0.06);
+  --color-reviewer-border: rgba(251, 146, 60, 0.22);
+  --color-reviewer-glow: rgba(251, 146, 60, 0.12);
+
+  --color-output: #a78bfa;
+  --color-output-bg: rgba(167, 139, 250, 0.06);
+  --color-output-border: rgba(167, 139, 250, 0.22);
+  --color-output-glow: rgba(167, 139, 250, 0.12);
+
+  --text-primary: #e8e8ee;
+  --text-secondary: #94a0b8;
+  --text-muted: #5f6880;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+}
+
+/* ========== GRID BACKGROUND ========== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== LAYOUT ========== */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 36px 24px 48px;
+}
+
+/* ========== HEADER ========== */
+.header { text-align: center; margin-bottom: 44px; }
+.header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-orch);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.header__badge svg { width: 13px; height: 13px; }
+.header__title {
+  font-size: clamp(1.4rem, 1rem + 2vw, 2.25rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+.header__sub {
+  font-size: clamp(0.8rem, 0.75rem + 0.3vw, 0.95rem);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ========== DIAGRAM ========== */
+.diagram-wrap {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.diagram-wrap::-webkit-scrollbar { height: 6px; }
+.diagram-wrap::-webkit-scrollbar-track { background: transparent; }
+.diagram-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+.diagram {
+  position: relative;
+  min-width: 1080px;
+  height: 620px;
+  margin: 0 auto;
+}
+
+/* ========== SVG LAYER ========== */
+.svg-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ========== NODE BASE ========== */
+.n {
+  position: absolute;
+  z-index: 2;
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+.n:hover { transform: translateY(-3px); }
+
+.n__ico { font-size: 20px; margin-bottom: 6px; line-height: 1; }
+.n__title { font-size: 13px; font-weight: 650; margin-bottom: 3px; letter-spacing: -0.01em; }
+.n__desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.n__tools { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.n__tool {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: var(--text-muted);
+}
+
+/* Node variants */
+.n--user { border-color: var(--color-user-border); background: var(--color-user-bg); }
+.n--user:hover { box-shadow: 0 6px 28px var(--color-user-glow); }
+.n--user .n__title { color: var(--color-user); }
+
+.n--orch { border-color: var(--color-orch-border); background: var(--color-orch-bg); }
+.n--orch:hover { box-shadow: 0 6px 28px var(--color-orch-glow); }
+.n--orch .n__title { color: var(--color-orch); }
+
+.n--writer { border-color: var(--color-writer-border); background: var(--color-writer-bg); }
+.n--writer:hover { box-shadow: 0 6px 28px var(--color-writer-glow); }
+.n--writer .n__title { color: var(--color-writer); }
+
+.n--rev { border-color: var(--color-reviewer-border); background: var(--color-reviewer-bg); }
+.n--rev:hover { box-shadow: 0 6px 28px var(--color-reviewer-glow); }
+.n--rev .n__title { color: var(--color-reviewer); }
+
+.n--out { border-color: var(--color-output-border); background: var(--color-output-bg); }
+.n--out:hover { box-shadow: 0 6px 28px var(--color-output-glow); }
+.n--out .n__title { color: var(--color-output); }
+
+/* ========== ANIMATED ARROWS ========== */
+@keyframes flowForward { to { stroke-dashoffset: -18; } }
+@keyframes flowBack { to { stroke-dashoffset: 18; } }
+
+.arrow {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-dasharray: 7 5;
+  animation: flowForward 0.9s linear infinite;
+}
+.arrow--back { animation-name: flowBack; }
+.arrow--solid { stroke-dasharray: none; animation: none; stroke-width: 1.5; }
+
+.arrow-glow {
+  fill: none;
+  stroke-width: 5;
+  opacity: 0.12;
+}
+
+/* ========== LOOP BADGE ========== */
+.loop-badge {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(251, 146, 60, 0.28);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-reviewer);
+  white-space: nowrap;
+  box-shadow: 0 0 16px rgba(251, 146, 60, 0.08);
+}
+.loop-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+.loop-badge__ctr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: rgba(251, 146, 60, 0.12);
+  transition: opacity 0.2s, background 0.3s, color 0.3s;
+}
+
+/* ========== STEP PILL ========== */
+.step {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.step__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ========== LEGEND ========== */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 36px;
+  padding: 14px 20px;
+  background: rgba(19, 21, 30, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.legend__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ========== FOOTER ========== */
+footer {
+  text-align: center;
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+footer a {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+footer a:hover { color: var(--text-secondary); }
+
+/* ========== AMBIENT GLOWS ========== */
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .page { padding: 20px 12px 32px; }
+  .header { margin-bottom: 28px; }
+  .diagram-wrap { margin: 0 -12px; padding: 0 12px 12px; }
+  .legend { gap: 10px; padding: 10px 14px; }
+}
+
+/* ========== ENTRANCE ANIMATION ========== */
+.n, .step, .loop-badge {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.svg-layer { opacity: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Ambient -->
+  <div class="glow" style="width:500px;height:500px;background:#60a5fa;top:5%;left:15%"></div>
+  <div class="glow" style="width:400px;height:400px;background:#4ade80;top:35%;right:10%"></div>
+  <div class="glow" style="width:350px;height:350px;background:#fb923c;bottom:5%;left:45%"></div>
+
+  <header class="header">
+    <div class="header__badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      Multi-Agent System
+    </div>
+    <h1 class="header__title">LinkedIn Article Agentic Workflow Architecture</h1>
+    <p class="header__sub">Multi-agent research, drafting, and review pipeline with iterative feedback loops</p>
+  </header>
+
+  <div class="diagram-wrap">
+    <div class="diagram" id="diagram">
+
+      <!-- ===== SVG ARROWS ===== -->
+      <svg class="svg-layer" id="svgLayer" viewBox="0 0 1080 620" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="ah-teal" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#2dd4bf"/></marker>
+          <marker id="ah-blue" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#60a5fa"/></marker>
+          <marker id="ah-green" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#4ade80"/></marker>
+          <marker id="ah-orange" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#fb923c"/></marker>
+          <marker id="ah-purple" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#a78bfa"/></marker>
+        </defs>
+
+        <!-- 1. User > Orchestrator (straight down) -->
+        <path class="arrow-glow" stroke="#2dd4bf" d="M155,115 L155,175"/>
+        <path class="arrow" stroke="#2dd4bf" d="M155,115 L155,175" marker-end="url(#ah-teal)"/>
+
+        <!-- 2. Orchestrator > Writer (right) -->
+        <path class="arrow-glow" stroke="#60a5fa" d="M250,250 C320,250 350,255 410,255"/>
+        <path class="arrow" stroke="#60a5fa" d="M250,250 C320,250 350,255 410,255" marker-end="url(#ah-blue)"/>
+
+        <!-- 3. Orchestrator > Reviewer (curved below through center) -->
+        <path class="arrow-glow" stroke="#60a5fa" d="M250,300 C340,360 520,380 635,360"/>
+        <path class="arrow" stroke="#60a5fa" d="M250,300 C340,360 520,380 635,360" marker-end="url(#ah-blue)"/>
+
+        <!-- 4. Writer revised draft > Reviewer (bottom arc) -->
+        <path class="arrow-glow" stroke="#4ade80" d="M575,340 C590,390 615,395 640,370"/>
+        <path class="arrow" stroke="#4ade80" d="M575,340 C590,390 615,395 640,370" marker-end="url(#ah-green)"/>
+
+        <!-- 5. Reviewer > Writer (feedback: top arc back) -->
+        <path class="arrow-glow" stroke="#fb923c" d="M650,270 C630,215 575,205 540,220"/>
+        <path class="arrow arrow--back" stroke="#fb923c" d="M650,270 C630,215 575,205 540,220" marker-end="url(#ah-orange)"/>
+
+        <!-- 6. Reviewer > Notification (right) -->
+        <path class="arrow-glow" stroke="#fb923c" d="M768,325 L838,325"/>
+        <path class="arrow" stroke="#fb923c" d="M768,325 L838,325" marker-end="url(#ah-orange)"/>
+
+        <!-- 7. Notification > Final Draft (down) -->
+        <path class="arrow-glow" stroke="#a78bfa" d="M910,380 L910,432"/>
+        <path class="arrow" stroke="#a78bfa" d="M910,380 L910,432" marker-end="url(#ah-purple)"/>
+
+        <!-- 8. Writer > Draft file (down) -->
+        <path class="arrow-glow" stroke="#4ade80" d="M500,340 L500,395"/>
+        <path class="arrow" stroke="#4ade80" d="M500,340 L500,395" marker-end="url(#ah-green)"/>
+
+        <!-- 9. Final output > back to User (long curve) -->
+        <path class="arrow-glow" stroke="#a78bfa" d="M855,490 C680,570 250,560 150,140" opacity="0.07"/>
+        <path class="arrow" stroke="#a78bfa" d="M855,490 C680,570 250,560 150,140" marker-end="url(#ah-purple)" style="opacity:0.4; stroke-dasharray:5 7;"/>
+      </svg>
+
+      <!-- ===== NODES ===== -->
+
+      <!-- USER -->
+      <div class="n n--user" style="left:65px; top:20px; width:185px;">
+        <div class="n__ico">&#x1F464;</div>
+        <div class="n__title">User (You)</div>
+        <div class="n__desc">Provides technical details, topic, and target audience for the LinkedIn article</div>
+      </div>
+
+      <!-- ORCHESTRATOR -->
+      <div class="n n--orch" style="left:60px; top:180px; width:195px;">
+        <div class="n__ico">&#x1F3AF;</div>
+        <div class="n__title">Orchestrator Agent</div>
+        <div class="n__desc">Coordinates the full pipeline: spawns subagents, manages review rounds, routes data</div>
+        <div class="n__tools">
+          <span class="n__tool">spawn_agent</span>
+          <span class="n__tool">read_file</span>
+          <span class="n__tool">notify</span>
+        </div>
+      </div>
+
+      <!-- WRITER -->
+      <div class="n n--writer" style="left:415px; top:195px; width:195px;">
+        <div class="n__ico">&#x270D;&#xFE0F;</div>
+        <div class="n__title">Research & Writer Agent</div>
+        <div class="n__desc">Deep web research on topic, synthesizes findings, drafts polished LinkedIn article</div>
+        <div class="n__tools">
+          <span class="n__tool">search_web</span>
+          <span class="n__tool">fetch_url</span>
+          <span class="n__tool">search_vertical</span>
+          <span class="n__tool">write_file</span>
+        </div>
+      </div>
+
+      <!-- REVIEWER -->
+      <div class="n n--rev" style="left:635px; top:255px; width:185px;">
+        <div class="n__ico">&#x1F50D;</div>
+        <div class="n__title">Reviewer Agent</div>
+        <div class="n__desc">Fact-checks claims, verifies sources, detects hallucination, reviews quality & tone</div>
+        <div class="n__tools">
+          <span class="n__tool">search_web</span>
+          <span class="n__tool">fetch_url</span>
+          <span class="n__tool">write_file</span>
+        </div>
+      </div>
+
+      <!-- DRAFT FILE -->
+      <div class="n n--writer" style="left:435px; top:400px; width:150px; padding:14px 16px;">
+        <div class="n__ico">&#x1F4C4;</div>
+        <div class="n__title">Draft File</div>
+        <div class="n__desc">Article saved to workspace after each revision round</div>
+      </div>
+
+      <!-- NOTIFICATION -->
+      <div class="n n--out" style="left:840px; top:270px; width:155px; padding:14px 16px;">
+        <div class="n__ico">&#x1F514;</div>
+        <div class="n__title">Notification</div>
+        <div class="n__desc">In-app alert sent when the article is ready for review</div>
+      </div>
+
+      <!-- FINAL DRAFT -->
+      <div class="n n--out" style="left:840px; top:435px; width:155px; padding:14px 16px;">
+        <div class="n__ico">&#x1F4DD;</div>
+        <div class="n__title">Final Draft</div>
+        <div class="n__desc">Polished article file ready to post on LinkedIn</div>
+      </div>
+
+      <!-- LOOP BADGE -->
+      <div class="loop-badge" style="left:530px; top:168px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Review Loop
+        <span class="loop-badge__ctr" id="roundCtr">Round 1/3</span>
+      </div>
+
+      <!-- STEP LABELS -->
+      <div class="step" style="left:172px; top:138px;">
+        <span class="step__n">1</span> Prompt
+      </div>
+      <div class="step" style="left:290px; top:235px;">
+        <span class="step__n">2</span> Spawn writer
+      </div>
+      <div class="step" style="left:330px; top:365px;">
+        <span class="step__n">3</span> Spawn reviewer
+      </div>
+      <div class="step" style="left:589px; top:210px;">
+        <span class="step__n">4</span> Feedback
+      </div>
+      <div class="step" style="left:774px; top:300px;">
+        <span class="step__n">5</span> Approved
+      </div>
+      <div class="step" style="left:876px; top:408px;">
+        <span class="step__n">6</span> Save
+      </div>
+      <div class="step" style="left:460px; top:555px;">
+        <span class="step__n">7</span> User reviews & posts to LinkedIn
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend__item">
+      <span class="legend__dot" style="background:var(--color-user)"></span> User (Teal)
+    </div>
+    <div class="legend__item">
+      <span class="legend__dot" style="background:var(--color-orch)"></span> Orchestrator (Blue)
+    </div>
+    <div class="legend__item">
+      <span class="legend__dot" style="background:var(--color-writer)"></span> Writer Agent (Green)
+    </div>
+    <div class="legend__item">
+      <span class="legend__dot" style="background:var(--color-reviewer)"></span> Reviewer Agent (Orange)
+    </div>
+    <div class="legend__item">
+      <span class="legend__dot" style="background:var(--color-output)"></span> Outputs (Purple)
+    </div>
+    <div class="legend__item">
+      <svg width="20" height="2" style="flex-shrink:0"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--text-muted)" stroke-width="2" stroke-dasharray="4 3"/></svg>
+      Animated data flow
+    </div>
+    <div class="legend__item">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-reviewer)" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      Feedback loop (max 3 rounds)
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+  </footer>
+</div>
+
+<script>
+// ===== Round counter animation =====
+(function() {
+  const el = document.getElementById('roundCtr');
+  if (!el) return;
+  const rounds = ['Round 1/3', 'Round 2/3', 'Round 3/3', '\u2713 Approved'];
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % rounds.length;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = rounds[i];
+      el.style.opacity = '1';
+      if (rounds[i] === '\u2713 Approved') {
+        el.style.background = 'rgba(74,222,128,0.18)';
+        el.style.color = '#4ade80';
+      } else {
+        el.style.background = 'rgba(251,146,60,0.12)';
+        el.style.color = '#fb923c';
+      }
+    }, 180);
+  }, 2200);
+})();
+
+// ===== Entrance animations =====
+(function() {
+  const nodes = document.querySelectorAll('.n');
+  nodes.forEach((n, i) => {
+    n.style.transition = 'opacity 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1)';
+    setTimeout(() => {
+      n.style.opacity = '1';
+      n.style.transform = 'translateY(0)';
+    }, 120 + i * 90);
+  });
+
+  const svg = document.getElementById('svgLayer');
+  svg.style.transition = 'opacity 0.7s ease';
+  setTimeout(() => { svg.style.opacity = '1'; }, 500);
+
+  document.querySelectorAll('.step, .loop-badge').forEach((el, i) => {
+    el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    setTimeout(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 750 + i * 60);
+  });
+})();
+</script>
+</body>
+</html>
