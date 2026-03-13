@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+<!-- Add changes here as they are developed. Move to a version section on release. -->
+
 ## [1.0.0] - 2026-03-13
 
 ### Added
@@ -17,6 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive architecture diagram (HTML) with animated data flow visualization
 - Full SKILL.md specification following agentskills.io format
 - README with project overview, architecture, and usage guide
+
+### Repository Governance
+- CONTRIBUTING.md with Conventional Commits spec, branching strategy, and PR process
+- CODE_OF_CONDUCT.md (Contributor Covenant v2.1)
+- CODEOWNERS for automatic review assignment
+- Issue templates (bug report, feature request)
+- Pull request template with checklist
+- SECURITY.md with vulnerability reporting policy
+- GitHub Actions CI workflow for skill validation and repo health checks
+- BRANCHING_STRATEGY.md documenting Git Flow conventions and release process
+- MIT License
 
 ### Architecture Decisions
 - Chose subagent-based architecture over single-agent for separation of concerns
