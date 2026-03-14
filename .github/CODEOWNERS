@@ -5,8 +5,8 @@
 # Default owner for everything in the repo
 * @kpant001
 
-# Skill definition — changes here affect agent behavior
-/skill/ @kpant001
+# Skill definition -- changes here affect agent behavior
+/linkedin-article-workflow/ @kpant001
 
 # CI/CD and repo governance
 /.github/ @kpant001

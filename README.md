@@ -38,35 +38,35 @@ This project implements an automated pipeline where:
 
 ```
 User (topic/details)
-    │
-    ▼
-┌─────────────────────┐
-│  Orchestrator Agent  │  ← Coordinates the pipeline
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────────┐
-│  Research & Writer Agent │  ← Deep research + drafting
-│  • search_web            │
-│  • fetch_url             │
-│  • search_vertical       │
-└─────────┬───────────────┘
-          │
-          ▼
-┌─────────────────────────┐
-│  Reviewer Agent          │  ← Fact-checking + quality
-│  • Verify claims         │
-│  • Detect hallucination  │
-│  • Score quality         │
-└─────────┬───────────────┘
-          │
-    ┌─────┴─────┐
-    │ Approved?  │──→ Yes → Notify User → Done
-    └─────┬─────┘
-          │ No
-          ▼
-    Feedback → Writer revises
-    (up to 3 rounds)
+    |
+    v
++---------------------+
+|  Orchestrator Agent  |  <- Coordinates the pipeline
++----------+----------+
+           |
+           v
++-------------------------+
+|  Research & Writer Agent |  <- Deep research + drafting
+|  - search_web            |
+|  - fetch_url             |
+|  - search_vertical       |
++----------+--------------+
+           |
+           v
++-------------------------+
+|  Reviewer Agent          |  <- Fact-checking + quality
+|  - Verify claims         |
+|  - Detect hallucination  |
+|  - Score quality         |
++----------+--------------+
+           |
+     +-----+-----+
+     | Approved?  |-->  Yes -> Notify User -> Done
+     +-----+-----+
+           | No
+           v
+     Feedback -> Writer revises
+     (up to 3 rounds)
 ```
 
 > For an interactive animated version of this diagram, see [`docs/architecture.html`](docs/architecture.html).
@@ -81,11 +81,11 @@ User (topic/details)
 
 ## Key Features
 
-- **Zero hallucination policy** — Every factual claim must be research-backed with source URLs
-- **Iterative quality** — Up to 3 rounds of writer-reviewer feedback
-- **Source transparency** — Produces both a clean LinkedIn-ready version and a version with full source citations
-- **LinkedIn-optimized** — Short paragraphs, strong hooks, relevant hashtags
-- **Human in the loop** — The workflow produces the draft; you review and post
+- **Zero hallucination policy** -- Every factual claim must be research-backed with source URLs
+- **Iterative quality** -- Up to 3 rounds of writer-reviewer feedback
+- **Source transparency** -- Produces both a clean LinkedIn-ready version and a version with full source citations
+- **LinkedIn-optimized** -- Short paragraphs, strong hooks, relevant hashtags
+- **Human in the loop** -- The workflow produces the draft; you review and post
 
 ## Usage
 
@@ -104,35 +104,35 @@ This is designed as a [Perplexity Computer](https://www.perplexity.ai/computer) 
 |-----------|---------|--------|
 | Target audience | Technical professionals | Any LinkedIn audience |
 | Tone | Professional thought-leadership | Conversational, tutorial, etc. |
-| Length | 800–1200 words | Short (~300), Standard, Long (~2000+) |
-| Review rounds | Up to 3 | 1–3 rounds |
+| Length | 800-1200 words | Short (~300), Standard, Long (~2000+) |
+| Review rounds | Up to 3 | 1-3 rounds |
 | Notification | In-app | Email or in-app |
 
 ## Project Structure
 
 ```
 linkedin-article-workflow/
-├── .github/
-│   ├── CODEOWNERS                   # Code ownership assignments
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.md            # Bug report template
-│   │   └── feature_request.md       # Feature request template
-│   ├── PULL_REQUEST_TEMPLATE.md      # PR checklist template
-│   └── workflows/
-│       └── validate.yml             # CI: skill validation + repo checks
-├── docs/
-│   ├── architecture.html            # Interactive architecture diagram
-│   └── BRANCHING_STRATEGY.md        # Git branching and release conventions
-├── skill/
-│   └── SKILL.md                     # Agent skill definition
-├── .gitignore
-├── CHANGELOG.md                     # Version history (Keep a Changelog)
-├── CODE_OF_CONDUCT.md               # Contributor Covenant v2.1
-├── CONTRIBUTING.md                  # Contribution guidelines
-├── LICENSE                          # MIT License
-├── README.md                        # This file
-├── SECURITY.md                      # Vulnerability reporting policy
-└── VERSION                          # Current version (semver)
++-- .github/
+|   +-- CODEOWNERS                   # Code ownership assignments
+|   +-- ISSUE_TEMPLATE/
+|   |   +-- bug_report.md            # Bug report template
+|   |   +-- feature_request.md       # Feature request template
+|   +-- PULL_REQUEST_TEMPLATE.md      # PR checklist template
+|   +-- workflows/
+|       +-- validate.yml             # CI: skill validation + repo checks
++-- docs/
+|   +-- architecture.html            # Interactive architecture diagram
+|   +-- BRANCHING_STRATEGY.md        # Git branching and release conventions
++-- linkedin-article-workflow/
+|   +-- SKILL.md                     # Agent skill definition
++-- .gitignore
++-- CHANGELOG.md                     # Version history (Keep a Changelog)
++-- CODE_OF_CONDUCT.md               # Contributor Covenant v2.1
++-- CONTRIBUTING.md                  # Contribution guidelines
++-- LICENSE                          # MIT License
++-- README.md                        # This file
++-- SECURITY.md                      # Vulnerability reporting policy
++-- VERSION                          # Current version (semver)
 ```
 
 ## Contributing
